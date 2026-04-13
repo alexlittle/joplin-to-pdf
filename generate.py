@@ -4,10 +4,20 @@ import re
 
 
 def fix_unicode_corruption(text: str) -> str:
-    """Remove emoji and Unicode characters that xelatex can't handle."""
     # Remove keycap emoji sequences (e.g. 4️⃣ → 4)
     text = re.sub(r'\ufe0f\u20e3', '', text)
     text = re.sub(r'\ufe0f', '', text)
+
+    # Replace known symbols with LaTeX equivalents BEFORE stripping
+    text = text.replace('\u2705', r'\checkmark{}')  # ✅
+    text = text.replace('\u2713', r'\checkmark{}')  # ✓
+    text = text.replace('\u274c', r'$\times$')      # ❌
+    text = text.replace('\u2248', r'$\approx$')     # ≈
+    text = text.replace('\u2260', r'$\neq$')        # ≠
+    text = text.replace('\u2264', r'$\leq$')        # ≤
+    text = text.replace('\u2261', r'$\equiv$')      # ≡
+    text = text.replace('\u2194', r'$\leftrightarrow$')  # ↔
+    text = text.replace('\u2192', r'$\rightarrow$') # →
 
     # Replace emoji at start of line with markdown bullet
     text = re.sub(r'^[\U0001F000-\U0001FFFF\u2600-\u26FF\u2700-\u27BF]+\s+', '- ', text, flags=re.MULTILINE)
@@ -44,10 +54,8 @@ files = sorted(SRC.glob("*.md"))
 combined = []
 
 for f in files:
-    title = f.stem.replace("-", " ")
-    combined.append(f"# {title}\n")
     combined.append(f.read_text(encoding="utf-8"))
-    combined.append("\n")
+    combined.append("\n\\newpage\n")
 
 combined_text = "\n".join(combined)
 
@@ -70,17 +78,15 @@ subprocess.run(
         "pandoc",
         str(OUT_MD),
         "--toc",
-        "--toc-depth=3",
+        "--toc-depth=2",
         "--number-sections",
         "--pdf-engine=xelatex",
         "--from", "markdown+tex_math_dollars",
         "-V", "geometry:margin=1in",
-        "-V", "mainfont=DejaVu Serif",
-        "-V", "monofont=DejaVu Sans Mono",
         "-o",
         str(OUT_PDF),
     ],
     check=True,
 )
 
-print("✅ PDF generated successfully:", OUT_PDF)
+print("PDF generated successfully:", OUT_PDF)
