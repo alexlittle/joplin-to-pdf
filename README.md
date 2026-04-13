@@ -13,7 +13,7 @@ Requires:
 Steps:
 
 1. (optional) Export notebook from Joplin (using Export $\to$ markdown)
-2. Run generate.py
+2. `python generate.py <input_dir> <output_name>`
 
 
 Gotchas:

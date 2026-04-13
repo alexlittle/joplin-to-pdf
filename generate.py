@@ -1,6 +1,17 @@
-from pathlib import Path
-import subprocess
+#!/usr/bin/env python3
+"""
+Usage:
+    python generate.py <input_dir> <output_name>
+
+Example:
+    python generate.py ~/notes/deep-learning deep-learning
+    → produces ./output/deep-learning.md and ./output/deep-learning.pdf
+"""
+
+import argparse
 import re
+import subprocess
+from pathlib import Path
 
 
 def fix_unicode_corruption(text: str) -> str:
@@ -29,64 +40,79 @@ def fix_unicode_corruption(text: str) -> str:
 
 
 def fix_latex_commands(text: str) -> str:
-    """Fix non-standard LaTeX command names."""
+    """Fix non-standard LaTeX command names and spacing commands."""
     text = text.replace(r'\argmin', r'\arg\min')
     text = text.replace(r'\argmax', r'\arg\max')
     return text
 
 
-# ============================================================
-# Configuration
-# ============================================================
+def main():
+    parser = argparse.ArgumentParser(description="Convert a folder of Markdown files to a PDF.")
+    parser.add_argument("input_dir", help="Directory containing .md files")
+    parser.add_argument("output_name", help="Output filename stem (e.g. 'deep-learning')")
+    args = parser.parse_args()
 
-SRC = Path("/home/alex/Downloads/temp/Masters/S2 - Deep Learning/revision")
-OUT_MD = Path("./output/deep-learning.md")
-OUT_PDF = Path("./output/deep-learning.pdf")
+    src = Path(args.input_dir).expanduser().resolve()
+    if not src.is_dir():
+        raise SystemExit(f"Error: input directory not found: {src}")
 
-OUT_MD.parent.mkdir(parents=True, exist_ok=True)
+    out_dir = Path("./output")
+    out_dir.mkdir(parents=True, exist_ok=True)
 
-# ============================================================
-# 1. Combine Markdown files
-# ============================================================
+    out_md = out_dir / f"{args.output_name}.md"
+    out_pdf = out_dir / f"{args.output_name}.pdf"
 
-files = sorted(SRC.glob("*.md"))
 
-combined = []
+    # ============================================================
+    # 1. Combine Markdown files
+    # ============================================================
 
-for f in files:
-    combined.append(f.read_text(encoding="utf-8"))
-    combined.append("\n\\newpage\n")
+    files = sorted(src.glob("*.md"))
+    if not files:
+        raise SystemExit(f"Error: no .md files found in {src}")
 
-combined_text = "\n".join(combined)
+    print(f"Found {len(files)} file(s) in {src}")
 
-# ============================================================
-# 2. Sanitize
-# ============================================================
+    combined = []
+    for f in files:
+        combined.append(f.read_text(encoding="utf-8"))
+        combined.append("\n\\newpage\n")
 
-sanitized = fix_unicode_corruption(combined_text)
-sanitized = fix_latex_commands(sanitized)
+    combined_text = "\n".join(combined)
 
-OUT_MD.with_suffix(".md.bak").write_text(combined_text, encoding="utf-8")
-OUT_MD.write_text(sanitized, encoding="utf-8")
+    # ============================================================
+    # 2. Sanitize
+    # ============================================================
 
-# ============================================================
-# 3. Run Pandoc
-# ============================================================
+    sanitized = fix_unicode_corruption(combined_text)
+    sanitized = fix_latex_commands(sanitized)
 
-subprocess.run(
-    [
-        "pandoc",
-        str(OUT_MD),
-        "--toc",
-        "--toc-depth=2",
-        "--number-sections",
-        "--pdf-engine=xelatex",
-        "--from", "markdown+tex_math_dollars",
-        "-V", "geometry:margin=1in",
-        "-o",
-        str(OUT_PDF),
-    ],
-    check=True,
-)
+    out_md.with_suffix(".md.bak").write_text(combined_text, encoding="utf-8")
+    out_md.write_text(sanitized, encoding="utf-8")
 
-print("PDF generated successfully:", OUT_PDF)
+    # ============================================================
+    # 3. Run Pandoc
+    # ============================================================
+
+    subprocess.run(
+        [
+            "pandoc",
+            str(out_md),
+            "--toc",
+            "--toc-depth=2",
+            "--number-sections",
+            "--pdf-engine=xelatex",
+            "--from", "markdown+tex_math_dollars",
+            "-V", "geometry:margin=1in",
+            "-V", "mainfont=DejaVu Serif",
+            "-V", "monofont=DejaVu Sans Mono",
+            "-o", str(out_pdf),
+        ],
+        check=True,
+    )
+
+    print(f"PDF generated successfully: {out_pdf}")
+
+
+if __name__ == "__main__":
+    main()
