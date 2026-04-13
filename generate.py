@@ -75,8 +75,8 @@ def main():
 
     combined = []
     for f in files:
-        combined.append(f.read_text(encoding="utf-8"))
         combined.append("\n\\newpage\n")
+        combined.append(f.read_text(encoding="utf-8"))
 
     combined_text = "\n".join(combined)
 
@@ -87,7 +87,7 @@ def main():
     sanitized = fix_unicode_corruption(combined_text)
     sanitized = fix_latex_commands(sanitized)
 
-    out_md.with_suffix(".md.bak").write_text(combined_text, encoding="utf-8")
+    #out_md.with_suffix(".md.bak").write_text(combined_text, encoding="utf-8")
     out_md.write_text(sanitized, encoding="utf-8")
 
     # ============================================================
@@ -103,9 +103,11 @@ def main():
             "--number-sections",
             "--pdf-engine=xelatex",
             "--from", "markdown+tex_math_dollars",
-            "-V", "geometry:margin=1in",
+            "-V", "geometry:margin=0.75in",
             "-V", "mainfont=DejaVu Serif",
             "-V", "monofont=DejaVu Sans Mono",
+            "-V", "documentclass=extarticle",
+            "-V", "fontsize=8pt",
             "-o", str(out_pdf),
         ],
         check=True,
