@@ -10,9 +10,22 @@ Example:
 
 import argparse
 import re
+import shutil
 import subprocess
 from pathlib import Path
 
+
+def find_resources_dir(start: Path) -> Path | None:
+    """
+    Walk upwards from `start` until a `_resources` directory is found.
+    Returns the path or None if not found.
+    """
+    current = start.resolve()
+    for parent in [current, *current.parents]:
+        candidate = parent / "_resources"
+        if candidate.is_dir():
+            return candidate
+    return None
 
 def fix_unicode_corruption(text: str) -> str:
     # Remove keycap emoji sequences (e.g. 4️⃣ → 4)
@@ -46,6 +59,18 @@ def fix_latex_commands(text: str) -> str:
     return text
 
 
+def fix_resource_paths(text: str) -> str:
+    """
+    Normalize Joplin image paths so that any ../../_resources/foo.png
+    becomes _resources/foo.png
+    """
+    return re.sub(
+        r'(?P<prefix>[\w\-/\.]*?)_resources/',
+        'output/_resources/',
+        text
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description="Convert a folder of Markdown files to a PDF.")
     parser.add_argument("input_dir", help="Directory containing .md files")
@@ -62,6 +87,17 @@ def main():
     out_md = out_dir / f"{args.output_name}.md"
     out_pdf = out_dir / f"{args.output_name}.pdf"
 
+    # copy resource (image files)
+    resources_src = find_resources_dir(src)
+    resources_dst = out_dir / "_resources"
+
+    if resources_src:
+        if resources_dst.exists():
+            shutil.rmtree(resources_dst)
+        shutil.copytree(resources_src, resources_dst)
+        print(f"Copied resources: {resources_src} → {resources_dst}")
+    else:
+        print("Warning: _resources directory not found in any parent directory")
 
     # ============================================================
     # 1. Combine Markdown files
@@ -86,6 +122,7 @@ def main():
 
     sanitized = fix_unicode_corruption(combined_text)
     sanitized = fix_latex_commands(sanitized)
+    sanitized = fix_resource_paths(sanitized)
 
     out_md.write_text(sanitized, encoding="utf-8")
 
@@ -123,6 +160,7 @@ def main():
        "-o", str(out_pdf),
         ],
         check=True,
+        #cwd=out_dir,
     )
 
     print(f"PDF generated successfully: {out_pdf}")

@@ -16,6 +16,4 @@ Steps:
 2. `python generate.py <input_dir> <output_name>`
 
 
-Gotchas:
-
-- Very picky about Latex/Katex format
+Note: it's all very picky about Latex/Katex format and emojis depending on the font, hence some of the fixing/regexes
