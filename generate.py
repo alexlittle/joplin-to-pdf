@@ -138,7 +138,7 @@ def main():
             "--toc-depth=2",
             "--number-sections",
             "--pdf-engine=xelatex",
-            "--from", "markdown+tex_math_dollars",
+            "--from", "markdown+tex_math_dollars-implicit_figures",
             "-V", "geometry:margin=0.75in",
             "-V", "mainfont=DejaVu Serif",
             "-V", "monofont=DejaVu Sans Mono",
