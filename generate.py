@@ -138,29 +138,15 @@ def main():
             "--toc-depth=2",
             "--number-sections",
             "--pdf-engine=xelatex",
-            "--from", "markdown+tex_math_dollars-implicit_figures",
-            "-V", "geometry:margin=0.75in",
+            "--from",
+            "markdown+raw_tex+tex_math_dollars-implicit_figures-yaml_metadata_block",
+            "--include-in-header=header.tex",
+            "-V", "documentclass=extarticle",
             "-V", "mainfont=DejaVu Serif",
             "-V", "monofont=DejaVu Sans Mono",
-            "-V", "documentclass=extarticle",
-            "-V", "fontsize=8pt",
-
-            "-V",
-              r'''header-includes=\usepackage{tocloft}
-                \setlength
-                {\cftsecnumwidth}{3
-                em}
-                \setlength
-                {\cftsubsecnumwidth}{4
-                em}
-                \setlength
-                {\cftsubsubsecnumwidth}{5
-                em}''',
-
-       "-o", str(out_pdf),
+            "-o", str(out_pdf),
         ],
         check=True,
-        #cwd=out_dir,
     )
 
     print(f"PDF generated successfully: {out_pdf}")
