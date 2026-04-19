@@ -1,6 +1,7 @@
 print("Remember: Reverse side goes face down!")
-TOTAL_PAGES = 132
-BLOCK_SIZE = 20
+TOTAL_PAGES = 130
+BLOCK_SIZE = 36 # Should be divisible by 4!
+
 
 
 def print_pages(
