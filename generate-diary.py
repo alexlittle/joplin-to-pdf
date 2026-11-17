@@ -12,8 +12,9 @@ Example:
        ./output/diary-2003-booklet.pdf  (A4 landscape, print double-sided
                                          see README note, fold & staple)
 
-Any .md file under the input dir whose name contains <year> (e.g. 2003-03.md,
-"TODO 2002-06.md", "2009 Ethiopia.md") is included, sorted by filename.
+Only files named exactly YYYY-MM.md (e.g. 2003-03.md) under the input dir are used.
+Other names (e.g. "TODO 2002-06.md", "2009 Ethiopia.md") are ignored, and the script
+stops if any of the 12 months is missing.
 """
 
 import argparse
@@ -24,19 +25,30 @@ from pathlib import Path
 
 
 def collect_files(root: Path, year: str) -> list[Path]:
-    files = [p for p in root.rglob("*.md") if year in p.stem]
-    # monthly files (YYYY-MM) first in order, then anything else
-    def key(p: Path):
-        m = re.search(rf"{year}-(\d\d)", p.stem)
-        return (0, int(m.group(1)), p.name) if m else (1, 0, p.name)
-    return sorted(files, key=key)
+    """Only files named exactly YYYY-MM.md (MM = 01-12), in month order.
+
+    Exits if any of the 12 months is missing or duplicated.
+    """
+    pattern = re.compile(rf"{re.escape(year)}-(0[1-9]|1[0-2])")
+    by_month: dict[int, list[Path]] = {}
+    for p in root.rglob("*.md"):
+        m = pattern.fullmatch(p.stem)
+        if m:
+            by_month.setdefault(int(m.group(1)), []).append(p)
+
+    missing = [calendar.month_name[m] for m in range(1, 13) if m not in by_month]
+    if missing:
+        raise SystemExit(f"Error: {year} is incomplete - missing {len(missing)} month(s): "
+                         + ", ".join(missing))
+    dupes = {m: ps for m, ps in by_month.items() if len(ps) > 1}
+    if dupes:
+        lines = [f"  {calendar.month_name[m]}: " + ", ".join(map(str, ps)) for m, ps in dupes.items()]
+        raise SystemExit(f"Error: duplicate files for {year}:\n" + "\n".join(lines))
+    return [by_month[m][0] for m in range(1, 13)]
 
 
 def title_for(p: Path, year: str) -> str:
-    m = re.search(rf"{year}-(\d\d)", p.stem)
-    if m and 1 <= int(m.group(1)) <= 12:
-        return f"{calendar.month_name[int(m.group(1))]} {year}"
-    return p.stem
+    return f"{calendar.month_name[int(p.stem.split('-')[1])]} {year}"
 
 
 def clean(text: str) -> str:
@@ -63,8 +75,6 @@ def main():
 
     root = Path(args.input).expanduser().resolve()
     files = collect_files(root, args.year)
-    if not files:
-        raise SystemExit(f"No .md files for {args.year} under {root}")
     print(f"Found {len(files)} file(s) for {args.year}")
 
     out_dir = Path("output")
@@ -104,6 +114,27 @@ def main():
     produced = a5.with_name(a5.stem + "-book.pdf")
     produced.replace(booklet)
     print(f"Reading copy: {a5}\nBooklet:      {booklet}")
+    print_sequence(booklet)
+
+
+def page_count(pdf: Path) -> int:
+    out = subprocess.run(["pdfinfo", str(pdf)], capture_output=True, text=True, check=True).stdout
+    return int(re.search(r"^Pages:\s+(\d+)", out, flags=re.MULTILINE).group(1))
+
+
+def print_sequence(booklet: Path):
+    """Manual duplex: each PDF page is one A4 side; odd = front, even = back of the same sheet."""
+    n = page_count(booklet)
+    odd = list(range(1, n + 1, 2))
+    even = list(range(2, n + 1, 2))
+    fmt = lambda pages: ",".join(map(str, pages))
+    print(f"\nPrinting ({n} sides = {n // 2} sheets, A4 landscape):")
+    print(f"  1. Print fronts (odd pages):   {fmt(odd)}")
+    print( "  2. Put the printed stack back in the tray, blank side to be printed")
+    print(f"  3. Print backs (even pages):   {fmt(even)}")
+    print(f"     If the sheets come out in the wrong order, use: {fmt(even[::-1])}")
+    print( "  4. Fold the stack in half and staple the spine.")
+    print( "  Tip: test with sheet 1 first (pages 1 then 2) to check back-side orientation.")
 
 
 if __name__ == "__main__":
