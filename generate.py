@@ -5,7 +5,7 @@ Usage:
 
 Example:
     python generate.py ~/notes/deep-learning deep-learning
-    → produces ./output/deep-learning.md and ./output/deep-learning.pdf
+    produces ./output/deep-learning.md and ./output/deep-learning.pdf
 """
 
 import argparse

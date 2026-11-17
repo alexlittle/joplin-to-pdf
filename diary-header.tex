@@ -1,0 +1,30 @@
+% Header for annual diary booklets (A5 pages, imposed onto A4)
+\usepackage{anyfontsize}
+\usepackage{graphicx}
+\setkeys{Gin}{width=0.8\linewidth,keepaspectratio}
+\usepackage{titlesec}
+\titleformat{\section}{\normalfont\Large\bfseries}{}{0pt}{\noindent\hrule height 1.2pt\vspace{5pt}}[\vspace{4pt}\noindent\hrule height 1.2pt]
+\titlespacing*{\section}{0pt}{10pt}{8pt}
+\titleformat{\subsection}{\normalfont}{}{0pt}{}
+% Day heading spacing: \titlespacing*{command}{left}{before}{after}
+%   {0pt}  (left)   extra indent of the heading from the left margin; 0 = flush with text.
+%   {8pt}  (before) vertical space ABOVE the heading, between the previous
+%                   content and this day. titlesec merges this with the
+%                   previous heading's "after" space (it takes the larger, it
+%                   does not add them), so consecutive empty days won't gain
+%                   the full 8pt each time.
+%   {10pt} (after)  vertical space BELOW the heading, between the day title and
+%                   its bullets (or the next heading if the day is empty).
+%   The * means the first paragraph after the heading is not indented.
+% NB: generate-diary.py also inserts a \vspace before every "##" day heading,
+% which is added on top of the "before" value here.
+\titlespacing*{\subsection}{0pt}{8pt}{6pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{2pt}
+\pagestyle{plain}
+% thin rule for week separators
+\renewcommand{\rule}[2]{\hrulefill}
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{enumitem}
+\setlist{before=\vspace{-4pt},topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
+\AtBeginDocument{\setlength{\parskip}{0pt}\setlength{\parindent}{0pt}}
