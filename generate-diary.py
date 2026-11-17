@@ -77,7 +77,10 @@ def main():
              f"\\begin{{center}}{{\\fontsize{{40}}{{48}}\\selectfont {args.year}}}\\\\[1em]"
              f"{{\\Large Diary}}\\end{{center}}\n\n\\vspace*{{\\fill}}\n\n\\newpage\n"]
     for f in files:
-        parts.append(f"\n# {title_for(f, args.year)}\n\n" + clean(f.read_text(encoding="utf-8")))
+        # month title spans the page; the days flow in 2 columns beneath it
+        parts.append(f"\n# {title_for(f, args.year)}\n\n`\\startcols`{{=latex}}\n\n"
+                     + clean(f.read_text(encoding="utf-8"))
+                     + "\n\n`\\stopcols`{=latex}\n")
     out_md.write_text("\n".join(parts), encoding="utf-8")
 
     # day headings are "##" -> demote via titlesec config in header (section=#, subsection=##)

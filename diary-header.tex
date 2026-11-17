@@ -3,7 +3,7 @@
 \usepackage{graphicx}
 \setkeys{Gin}{width=0.8\linewidth,keepaspectratio}
 \usepackage{titlesec}
-\titleformat{\section}{\normalfont\Large\bfseries}{}{0pt}{\noindent\hrule height 1.2pt\vspace{5pt}}[\vspace{4pt}\noindent\hrule height 1.2pt]
+\titleformat{\section}{\normalfont\Large\bfseries}{}{0pt}{\noindent\hrule height 1.2pt\vspace{7pt}}[\vspace{-13pt}\noindent\hrule height 1.2pt]
 \titlespacing*{\section}{0pt}{10pt}{8pt}
 \titleformat{\subsection}{\normalfont}{}{0pt}{}
 % Day heading spacing: \titlespacing*{command}{left}{before}{after}
@@ -18,7 +18,7 @@
 %   The * means the first paragraph after the heading is not indented.
 % NB: generate-diary.py also inserts a \vspace before every "##" day heading,
 % which is added on top of the "before" value here.
-\titlespacing*{\subsection}{0pt}{8pt}{6pt}
+\titlespacing*{\subsection}{0pt}{6pt}{6pt}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{2pt}
 \pagestyle{plain}
@@ -28,3 +28,14 @@
 \usepackage{enumitem}
 \setlist{before=\vspace{-4pt},topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
 \AtBeginDocument{\setlength{\parskip}{0pt}\setlength{\parindent}{0pt}}
+% Two-column days under each (full-width) month title; see generate-diary.py
+\usepackage{multicol}
+\setlength{\columnsep}{14pt}
+% Wrapped in macros so pandoc doesn't swallow the Markdown between begin/end as raw LaTeX
+\newcommand{\startcols}{\begin{multicols}{2}}
+\newcommand{\stopcols}{\end{multicols}}
+\usepackage{ragged2e}
+\AtBeginDocument{\RaggedRight}
+% Bullet indent: leftmargin = distance from column edge to the bullet text;
+% labelsep = gap between the bullet and its text. Smaller = bullets closer to the day title's left edge.
+\setlist[itemize]{leftmargin=1.1em,labelsep=0.4em,labelwidth=0.7em,itemindent=0pt}
